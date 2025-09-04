@@ -1,0 +1,20 @@
+
+node_modules
+frontend
+
+# Ignore logs
+npm-debug.log
+*.log
+
+# Ignore local environment files with secrets
+.env
+.env.local
+
+# Ignore the Git version control folder
+.git
+.gitignore
+
+# Ignore Docker files themselves
+Dockerfile
+.dockerignore
+docker-compose.yaml

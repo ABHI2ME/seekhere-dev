@@ -1,0 +1,79 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  // output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+model Comment {
+   id           Int  @id @default(autoincrement()) 
+   postId       String 
+   comment      String 
+   commentorId  String 
+   userName    String
+   createdAt    DateTime @default(now())
+
+   parentId     Int?
+   parent       Comment? @relation("CommentToReplies" , fields: [parentId] , references: [id] , onDelete: Cascade) 
+   replies      Comment[] @relation("CommentToReplies")
+   likeCount    CommentLikeCount[]
+   likes        CommentLike[]
+
+   @@index([parentId])
+   @@index([postId])
+}
+
+model PostLikes {
+   id           Int @id @default(autoincrement()) 
+   postId       String 
+   userId       String 
+   liked        Boolean
+   createdAt    DateTime @default(now())
+
+   @@index([postId])
+   @@unique([postId , userId])
+}
+
+model PostLikesCount {
+   id           Int @id @default(autoincrement())
+   postId       String
+   count        Int
+   createdAt    DateTime @default(now())
+   @@index([postId])
+} 
+
+model CommentLike {
+   id           Int @id @default(autoincrement())
+   commentId    Int
+   userId       String
+   liked        Boolean
+   createdAt    DateTime @default(now())
+   comment      Comment   @relation(fields: [commentId]  , references: [id] , onDelete: Cascade)
+   
+   @@unique([userId, commentId])
+   @@index([commentId])
+} 
+
+model CommentLikeCount {
+   id           Int @id @default(autoincrement())
+   commentId    Int 
+   userId       String 
+   count        Int @default(0)
+   createdAt    DateTime @default(now())
+   comment      Comment   @relation(fields: [commentId] , references: [id] , onDelete: Cascade)
+
+   @@index([commentId])
+   
+}
+
+
