@@ -7,7 +7,7 @@ const createTopic = async () => {
 
     await admin.createTopics({
 
-    // waitForLeaders: true ,
+    waitForLeaders: true ,
 
     topics: [{
         topic: "postLike",

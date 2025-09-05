@@ -1,8 +1,10 @@
-import { Kafka , CompressionTypes } from 'kafkajs'
+import { Kafka , CompressionTypes } from 'kafkajs';
+import dotenv from 'dotenv' ;
+dotenv.config() ;
 
 const kafka = new Kafka({
   clientId: 'my-app',
-  brokers: ['localhost:9092'],
+  brokers: process.env.KAFKA_BROKERS.split(","),
 })
 
-export default {kafka  , CompressionTypes};
+export  {kafka  , CompressionTypes};

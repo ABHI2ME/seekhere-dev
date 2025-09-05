@@ -1,5 +1,5 @@
 import crypto from 'crypto' ;
-import client from '../libs/redis.js';
+import client from '../libs/redisUpstash.js';
 const generateOtpSessionId = async (res ,  email) => {
     try {
         const otpSessionId = await crypto.randomBytes(18).toString("hex") ;

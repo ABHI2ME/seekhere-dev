@@ -1,5 +1,5 @@
 import jwt, { decode } from "jsonwebtoken" ;
-import client from "../libs/redis.js";
+import client from "../libs/redisUpstash.js";
 import signupValidation from "../libs/validateInput.js";
 import User from "../models/user.model.js";
 import {generateVerificationCode, verifyOtp} from "../utils/generateAndStoreOtp.js";

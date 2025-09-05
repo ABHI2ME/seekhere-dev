@@ -6,6 +6,9 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: seekhere-backend
+    volumes:
+      - ./backend:/seekhere/backend  # mount code
+      - /seekhere/backend/node_modules  # avoid overwriting node_modules
     env_file:
       - ./.env
     ports:
@@ -13,11 +16,28 @@ services:
     environment:
       - NODE_ENV=${NODE_ENV:-development}
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+      kafka:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    # command: >
+    #   sh -c "
+    #     npx prisma migrate deploy &&
+    #     npx prisma generate &&
+    #     npm run dev
+    #   "
+
     networks:
       - my-network
   redis:
     image: "redis:8-alpine" 
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
     container_name: redis
     ports:
       - "6379:6379" 
@@ -28,23 +48,32 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.6.0
+    healthcheck:
+      test: ["CMD", "bash", "-c", "kafka-topics --bootstrap-server=kafka:9092 --list || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 10
     container_name: kafka
     ports:
       - "9092:9092"
+      - "9093:9093"
     environment:
+      CLUSTER_ID: "Qd2A87bxR52L3iLTrkwjmA" # generated UUID
       KAFKA_NODE_ID: 1
       KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@localhost:29093"
-      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:29093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: "1@kafka:9093"
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,CONTROLLER:PLAINTEXT
       KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      
     volumes:
       - kafka-data:/var/lib/kafka/data
     networks:
       - my-network
+
   postgres:
     image: postgres:17-alpine
     container_name: postgres_db

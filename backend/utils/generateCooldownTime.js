@@ -1,4 +1,4 @@
-import client from "../libs/redis.js";
+import client from "../libs/redisUpstash.js";
 
 const generateCooldownTime = async (email) =>{
     const key = `coolDownOtp:${String(email).toLocaleLowerCase()}` ;

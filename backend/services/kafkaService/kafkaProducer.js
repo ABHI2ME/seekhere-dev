@@ -1,8 +1,16 @@
 import {kafka , CompressionTypes} from "../../libs/kafka.js";
+import kafkaConsumerRun from "./kafkaConsumer.js";
+import createTopic from "./kafkaTopic.js";
 
 
 const producer = kafka.producer({
-        maxInFlightRequests: 1,
+        idempotent: true, 
+        maxInFlightRequests: 3,
+        acks : "all" , 
+          retry: {
+          initialRetryTime: 300, // wait 300ms before first retry
+          retries: 5             // attempt to retry 5 times
+          } ,
      }) ;
 
      const buffer = [];
@@ -12,7 +20,9 @@ const producer = kafka.producer({
 
 export const start = async () =>{
      await producer.connect();
-     console.log('connected to the producer') ;
+     await createTopic() ;
+     await kafkaConsumerRun() ;
+     console.log('connected to the producer and topic created') ;
 }
 
 export const  sendPostLike = async (evt)=>{
@@ -37,10 +47,11 @@ export const  sendPostLike = async (evt)=>{
         timer = null ;
 
         const batch = buffer.splice(0 , MAX_BATCH) ;
+        console.log(batch) ;
         await producer.send({
             topic : "postLike" , 
             compression : CompressionTypes.GZIP, 
-            messaages : batch 
+            messages : batch 
         })
 
      }

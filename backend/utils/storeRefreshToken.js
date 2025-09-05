@@ -1,4 +1,4 @@
-import client from "../libs/redis.js";
+import client from "../libs/redisUpstash.js";
 
 const storeRefreshToken = async (userId , refreshToken) => {
      await client.set(`refresh_token:${userId}` , refreshToken , "EX" , 7*24*60*60) ;

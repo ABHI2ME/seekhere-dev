@@ -11,7 +11,7 @@ const kafkaConsumerRun = async () =>{
     });
     await consumer.connect();
     console.log("consumer connected") ;
-    await consumer.subscribe({topic: "post-like" ,fromBeginning : true}) ;
+    await consumer.subscribe({topic: "postLike" ,fromBeginning : true}) ;
 
     await consumer.run({
         eachBatch : async ({batch, resolveOffset, heartbeat, commitOffsetsIfNecessary }) => {
@@ -34,7 +34,7 @@ const kafkaConsumerRun = async () =>{
                         })
                     }) 
                 ) ;
-
+            
 
                 const pipeline = await redisClient.pipeline() ;
                 for(const evt of updates){
@@ -48,7 +48,30 @@ const kafkaConsumerRun = async () =>{
                     pipeline.expire(key, 604800); // for the 7 days :) 
                 }
                 await pipeline.exec() ;
+                
+                const postCountChanges = updates.reduce((arr , evt)=>{
+                     const change = evt.action === 'LIKE' ? 1 : -1 ;
+                     arr[evt.postId] = (arr[evt.postId] || 0) + change ;
+                     return arr ;
+                } , {}) ;
 
+            //  Create a transaction of efficient atomic updates 
+            await prisma.$transaction(
+                Object.entries(postCountChanges).map(([postId, netChange]) =>
+                prisma.PostLikesCount.upsert({
+                    where: { postId: postId },
+                    update : {
+                               count : {
+                                           increment : netChange ,
+                                       }
+                            } ,
+                    create : {
+                               postId: postId,
+                               count: netChange, // Set the initial count based on the batch
+                            } ,
+                })
+                )
+            );
 
             };
 

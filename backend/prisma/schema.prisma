@@ -46,8 +46,8 @@ model PostLikes {
 
 model PostLikesCount {
    id           Int @id @default(autoincrement())
-   postId       String
-   count        Int
+   postId       String @unique
+   count        Int @default(0)
    createdAt    DateTime @default(now())
    @@index([postId])
 } 

@@ -1,6 +1,6 @@
 import crypto, { hash } from 'crypto' ;
 import { configDotenv } from 'dotenv';
-import client from '../libs/redis.js';
+import client from '../libs/redisUpstash.js';
 import generateCooldownTime from './generateCooldownTime.js';
 import { raw } from 'express';
 import User from '../models/user.model.js';

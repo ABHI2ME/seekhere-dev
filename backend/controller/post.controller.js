@@ -370,10 +370,11 @@ export const createCommentReplies = async (req , res , next ) => {
 
 export const LikePostByUSer = async (req , res , next) => {
     try {
-     const postId = req.params ;
+     const postId = req.params.postId ;
      const user = req.user ;
-     let action = req.body ;
+     let {action} = req.body ;
      action = String(action) ;
+     console.log("*****************************" , action) ;
 
     const postExists = await Post.findById(postId) ;
     if(!postExists){
